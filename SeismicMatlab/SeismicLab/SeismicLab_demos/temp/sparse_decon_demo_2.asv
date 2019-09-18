@@ -1,0 +1,115 @@
+%SPARSE_DECON_DEMO: l1 sparse-spike deconvolution
+%
+%
+%            -----------------------------------
+%              A demo for Sparse Deconvolution 
+%
+%                  M.D.Sacchi, SeismicLab
+%            -----------------------------------
+%
+% The l1 regularization is used to estimate a sparse reflectivity 
+% sequence. The problem involves minimizing a cost function
+% J = ||Wr-d||^2 + mu * l1(r) where the first time is the misfit,
+% convolution of wavelet W with reflectivity r should reproduce
+% the data d, the second term is the regularization term used
+% to impose sparsity on the solution.
+%
+% This demo uses the following SeismicLab functions:
+%
+%               readsegy.m
+%               sparse_decon.m     
+%               wigb.m
+%
+
+ clear;
+ clear;
+ clc
+ close all;
+ 
+ setpath_seismiclab
+% Read traces
+
+ [d,Hs]=readsegy('small_stack.su');
+
+% Extract sampling interval and cdp number
+
+  dtsec = Hs(1).dt/1000/1000;
+  cdp = [Hs.cdp];
+
+% Read wavelet
+
+ [w,Hw] = readsegy('wavelet_for_small_stack.su');
+ 
+ N=11;
+ 
+ [e1,h1]=fep_wiener(d,N,0,0);
+ 
+%  [e0,h0]=fep_l1l2_pso(d,N,500,200,200,1);
+ 
+ h0=zeros(1,N);
+ h0(ceil(N/2))=1;
+ [e2,h2]=fep_wiggins(d,h0,100,0.5,1,0);
+ 
+ [best1] = bestwiener(h1,50);
+ [best2] = bestwiener(h2,50);
+ 
+ figure, plot(best1./sqrt(sum(best1.^2))), hold on
+ plot(best2./sqrt(sum(best2.^2)),'r'), 
+ plot(w./sqrt(sum(w.^2)),'k'), hold off
+ 
+% Estimate the reflectivity using l1 (sparse) regularization
+
+ max_iter = 10;
+ mu = 0.5;
+
+ [r,dp] = sparse_decon(d,best2',mu,max_iter);
+
+ for ii=1:size(r,1)
+     for jj=1:size(r,2)
+         if abs(r(ii,jj))>10e-4
+             r(ii,jj)=sign(r(ii,jj))*10e-4;
+         end
+     end
+ end
+ 
+ figure();
+
+ [nt,ncdp] = size(d);
+ t_axis =[0:1:nt-1]*dtsec;
+
+ subplot(131); wigb(d,2,cdp,t_axis);
+ xlabel('cdp');
+ ylabel('Time (s)');
+    
+ subplot(132); wigb(r,2,cdp,t_axis);
+ xlabel('cdp');
+
+ subplot(133); wigb(dp,2,cdp,t_axis);
+ xlabel('cdp');
+
+ [r1,dp1] = sparse_decon(d,w,mu,max_iter);
+  
+ figure();
+
+ [nt,ncdp] = size(d);
+ t_axis =[0:1:nt-1]*dtsec;
+
+ subplot(131); wigb(d,2,cdp,t_axis);
+ xlabel('cdp');
+ ylabel('Time (s)');
+
+ subplot(132); wigb(r1,2,cdp,t_axis);
+ xlabel('cdp');
+
+ subplot(133); wigb(dp1,2,cdp,t_axis);
+ xlabel('cdp');
+ 
+ [modulo_db]=espectro_smooth(r,1./0.002);
+ [modulo_db]=espectro_smooth(r1,1./0.002);
+ 
+ for ii=1:size(r1,2)
+     data(:,ii)=filter(w,1,r1(:,ii));
+ end
+ 
+ 
+ 
