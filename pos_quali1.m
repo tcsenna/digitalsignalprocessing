@@ -1,119 +1,45 @@
-clc;
-clear;
+clear all;
 close all;
-
-%catches the default stream used by the random generator
-% defaultStream = RandStream.getGlobalStream;
-%
-% %establishes the random seed
-% stream_exp = RandStream('mt19937ar','seed',1); defaultStream.State = stream_exp.State;
-%load r_quali
-%trials = 1;
-%for kk = 1:trials;
-    
-    Nx = 3;
-%     r  = Data(1:250,1:Nx);
-    r      = full(sprandn(300,Nx,0.2));
-    
-%      SYS1=tf(r(:,1)',1);
-%     raiz1a=zero(SYS1);
-%     SYS2=tf(r(:,2)',1);
-%     raiz2a=zero(SYS2);
-%     SYS3=tf(r(:,3)',1);
-%     raiz3a=zero(SYS3);
-
-    %z3=zeros(SYS3);
-    %r1(:,2) = r1(:,1);
-    %r2      = [1 0 1;0 0 0;0 1 0];
-    %r       = zeros(length(r1)+3-1,Nx);
-%     for ii=1:Nx
-%         r(:,ii)       = conv(r1(:,ii),r2(:,ii));
-%     end
-%     figure, imagesc(r);
-    %number of samples in each r and number of reflectivity series used
-    [Nsr,Nr] = size(r);
-    %r  = [r; zeros(100,Nx)];
-    dt = 2e-3;
-    fc = 40;
-    tw = -0.02:dt:0.03;
-    h  = (1-2*pi^2*fc^2*tw.^2).*exp(-pi^2*fc^2*tw.^2);
-    hh = hilbert(h);
-    th = -50*pi/180;
-    h  = cos(th)*real(hh)+sin(th)*imag(hh);
-    h  = h';
-    x  = [];
-    for j=1:Nr
-        x(:,j)=conv(h,r(:,j));
-    end
-    
-    %n              = randn(size(x));
-    x              = x./std(x(:));
-    %n              = n./std(n(:));
-    
-%     SNR            = 10^(1.8); %18dB
-%     SNR_dB         = 10*log10(SNR);
-%     
-%     alpha          = 1./sqrt(SNR);
-%     n              = alpha*n;
-    %x_awgn         = x+n;
-    x_awgn         = x; %sem ruido
-    x_awgn         = x_awgn./std(x_awgn(:));
-
-    
-    Nw             = length(h);
-    [Ns, Nx]       = size(x_awgn);
-    L              = Ns-Nw+1;
-    A  = criaA(x_awgn,L,Nx);
-    M=A'*A;
-    [v,d]=eig(M);
-%     [u,d,v,flag] = svds(M,length(M),'smallest','Tolerance',1e-6);
-%     figure(1)
-%     plot(diag(d))
-% %%    
-%     for ii =1:length(d)
-%         v(:,ii)   = v(:,ii)/norm(v(:,ii));
-%         rest      = v(:,ii);
-%         r         = r(:)/norm(r(:)); %empilho o r em vetor coluna e normalizo
-%         [rest,~] = delag1(r,rest,2*Nw);
-%         %rest      = rest(:);
-%         pcorr(ii) = rest'*r/(norm(rest)*norm(r));
-%     end
-%     
-%     
-    %flag
-    
-%     figure, plot(abs(pcorr))
-    
-     %melhor(kk)  = find(abs(pcorr)==max(abs(pcorr)));
-     %melhorp(kk) = max(abs(pcorr));
-     %maior(kk)   = length(d);
-    
-    % v(:,melhor) = v(:,melhor)./norm(abs(v(:,melhor)),inf);
-    % figure, plot(r(:,end)./norm(r(:,end),inf),'b','LineWidth',2), hold on
-    % plot(sign(pcorr(melhor))*v(:,melhor),'r','LineWidth',2)
-%end
-
-%figure, hist(melhor)
-%xlabel('Autovalor')
-%ylabel('% de melhores soluÃ§Ãµes em relaÃ§Ã£o a cada autovetor/autovalor')
-%figure, hist(melhorp)
-%xlabel('PCC')
-%ylabel('% de maior PCC por autovetor/autovalor')
+clc;
+%criação do dado
+dt = 4./1000;
+%tmax = 4;
+tmax = 3.996;
+amp = [1, 0.8, 0.64, 0.512, 0.41]; %amplitudes dadas pelo professor Renato
+f0 = 40;
+L=1;
+h = [0:50:450]; %10 traços, de 50 em 50
+%profundidade dos eventos, em amostras: 250, 300, 450, 600, 800
+%em milisegundos:
+tau=[996,1196,1796,2396,3196];
+%para segundos...
+tau=tau.*(10^(-3));
+%isto eu vou variando depois
+%snr2=[128,64,32,24,18,15,12,9];
+snr = 128 ;
+v=[1500, 2000, 2250, 2500, 2700];
+%%
+%  OUT  d:         Data that consist of a superposition of reflections
+%                  with hyerbolic  moveout (no avo)
+%       t,h:       time and offset axes 
+Nw             = length(ricker(f0,dt));
+[d,h,t]=hyperbolic_events(dt,f0,tmax,h,tau,v,amp,snr,L);
+%imagesc(h,t,d);
+%wigb(d);
+[Ns, Nx]= size(d);
+L              = Ns-Nw+1;
+A  = criaA(d,L,Nx); %passou no teste de dimensionalidade!
+M=A'*A;
+%DECOMPOSIÇÃO EM AUTOVETORES E AUTOVALORES DE M
+[v_M,d_M]=eig(M);
+%%%%%
+%%
+%teste para achar a função de refletividade a partir do hyperbolic events
+[d2,h2,t2]=hyperbolic_events(dt,10^10,tmax,h,tau,v,amp,snr,L);
+%wigb(d2)
 
 
 
 
 
-%figure, plot(melhor,melhorp,'o')
-% figure;
-% subplot (1,2,1);
-% plot(raiz2a,'k*');
-% hold on
-% plot(raiz1a,'ro');
-% hold off
-% subplot(1,2,2);
-% plot(raiz2a,'k*');
-% hold on
-% plot(raiz3a,'m+');
-% hold off
-%w_otim=inv(v'*v)*v'
+
