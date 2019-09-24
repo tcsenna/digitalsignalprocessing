@@ -1,7 +1,7 @@
 %C:\Users\Administrator\Desktop\Data Science\digitalsignalprocessing-master
-Dir1='C:\Users\Administrator\Desktop\Data Science\digitalsignalprocessing-master\SeismicMatlab\SeismicLab\codes';
-Dir2='C:\Users\Administrator\Desktop\Data Science\digitalsignalprocessing-master\SeismicMatlab\SeismicLab';
-Dir3='C:\Users\Administrator\Desktop\Data Science\digitalsignalprocessing-master\DeconvolutionToolbox';
+Dir1='C:\Users\Administrator\Desktop\Data Science\digitalsignalprocessing\SeismicMatlab\SeismicLab\codes';
+Dir2='C:\Users\Administrator\Desktop\Data Science\digitalsignalprocessing\SeismicMatlab\SeismicLab';
+Dir3='C:\Users\Administrator\Desktop\Data Science\digitalsignalprocessing\DeconvolutionToolbox';
 
 path(path, strcat(Dir1,'\bp_filter'));
 path(path, strcat(Dir1,'\decon'));

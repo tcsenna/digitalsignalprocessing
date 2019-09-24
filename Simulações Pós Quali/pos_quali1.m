@@ -24,7 +24,7 @@ d3= d3./std(d3(:)); %ESTÁ CERTO?
 n              = randn(size(d3));
 n              = n./std(n(:));
     
-    SNR=9;
+    SNR=128;
     %SNR_dB         = 10*log10(SNR);
     
     alpha          = 1./sqrt(SNR);
@@ -59,7 +59,7 @@ w=v_M'*r;
 x1=1:length(d_M);
 figure(1), 
 plot(x1,diag(d_M)), hold on
-title(['Magnitudes dos Autovalores referentes ao SNR= ',num2str(SNR)])
+title('Magnitudes dos Autovalores')
 xlim([x1(1) x1(end)]), grid on
 xlabel('Autovalor')
 ylabel('Magnitude')
@@ -71,7 +71,7 @@ for vv=1:length(v_M);
 end
 figure(2), 
 plot(x1,normas,'.'), hold on
-title(['Normas L1 dos Autovetores referentes ao SNR= ',num2str(SNR)])
+title('Normas L1 dos Autovetores')
 xlim([x1(1) x1(end)]), grid on
 xlabel('Autovetor')
 ylabel('Norma L1')
@@ -80,7 +80,7 @@ ylabel('Norma L1')
 figure(3)
 plot(x1,w)
 hold on
-title(['Análise de Componentes do vetor w referentes ao SNR= ',num2str(SNR)])
+title('Análise de Componentes do vetor w')
 xlabel('Autovetor')
 ylabel('Constante correspondente')
 %% ATÉ AQUI
@@ -90,8 +90,7 @@ ylabel('Constante correspondente')
 %%
 figure(4)
 subplot(121), wigb(dr), title('Refletividades Originais')
-subplot(122), wigb(d3_awgn), title('Traços com Ruído')
-suptitle(['Para a simulação do SNR= ',num2str(SNR)])
+subplot(122), wigb(d3), title('Traços com Ruído')
 % 6 - O resultado obtido com o "melhor" autovetor E 
 % 7 - O resultado obtido com o Wiener 
 %%
@@ -115,7 +114,7 @@ for ii =1:length(d_M)
 figure(5)
 plot(x1,pcorr,'.')
 hold on
-title(['PCC de cada autovetor em relação à refletividade real referente ao SNR= ',num2str(SNR)])
+title('PCC de cada autovetor em relação à refletividade real')
 xlabel('Autovetor')
 ylabel('PCC')
 
