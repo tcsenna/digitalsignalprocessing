@@ -18,7 +18,8 @@ v=[1500, 1800, 2050, 2300, 2500];
 [dr,hr,tr]=reflectivity_events(dt,tmax,h,tau,v,amp,L);%r pq é o real
 %snr=[128,64,32,24,18,15,12,9]; linear, né?
 %SNR eu vou variando depois
-d3=conv2(dr,ricker(f0,dt));
+wav=ricker(f0,dt);
+d3=conv2(dr,wav);
 d3= d3./std(d3(:)); %ESTÁ CERTO?
 %RUÍDO
 n              = randn(size(d3));
@@ -32,8 +33,8 @@ n              = n./std(n(:));
 %d3_awgn         = d3; %sem ruído                                                                                                
  d3_awgn         = d3+n;
 Nw= length(ricker(f0,dt));
-[Ns, Nx]= size(d3);
-L              = Ns-Nw+1;
+[Ns, Nx]= size(d3); %NS É O NUMERO DE AMOSTRAS DE UM TRAÇO E NX É O NUMERO DE TRAÇOS
+L              = Ns-Nw+1; %TAMANHO DA REFLETIVIDADE
 A  = criaA(d3_awgn,L,Nx); %passou no teste de dimensionalidade!
 M=A'*A;
 %DECOMPOSIÇÃO EM AUTOVETORES E AUTOVALORES DE M
@@ -45,6 +46,33 @@ M=A'*A;
 r         = dr(:)/norm(dr(:));
 %%%%%%%%%%%%%%%%% DEVO NORMALIZAR AQUI MESMO?
 w=v_M'*r;
+%%
+conv_wav=convmtx(wav',Ns);
+conv_wav=conv_wav(:,1:L); %convolution matrix with respect to this wavelet
+%vamos fazer um teste, calculando o pcc entre o traço 1 e convwav x 
+result=conv_wav*dr(:,1); %este deveria corresponder ao traço
+result=result/norm(result);
+traco=d3_awgn(:,1);
+traco=traco/norm(traco);
+%plot(1:1012,result,1:1012,traco)
+pcorr3 = result'*traco/(norm(result)*norm(traco));
+[result,~] = delag1(traco,result,2*Nw);
+pcorr4 = result'*traco/(norm(result)*norm(traco)); %DEU CERTO
+%mesmo com o traco com ruido de 12, deu um excelente pcorr
+%r1_est=polyfit(conv_wav,traco,1);
+%arrumando a matriz para linear regression via least squares
+%solution-normal equation
+XLS=[ones(Ns,1) conv_wav]; % Add intercept term to X
+THETA=pinv(XLS'*XLS)*XLS'*traco; %VETOR DE PARÂMETROS COM O THETA ZERO (BIAS)
+pcorr5 = r1_est'*traco/(norm(r1_est)*norm(traco));
+
+%%
+% IMPLEMENTAÇÃO CONHECENDO A WAVELET:
+%um traço é dado por:
+%tr_teste=convmtx(conv
+
+
+
 %%
 %%%%%%%%%%%%%%%%%%%%%% GRÁFICOS %%%%%%%%%%%%%%%%%%%%%%%%%%
 % 1- com as amplitudes dos autovalores
